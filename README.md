@@ -1,5 +1,7 @@
 # LeaseShield
 
+![LeaseShield Cover Banner](docs/leaseshield_cover.jpg)
+
 **Privacy-First Rental Agreement Analyzer powered by Firebase AI Logic Hybrid Inference**  
 Built for Google's **#BuildHybridAI 2026 Hackathon** (Android + iOS Flutter App).
 
@@ -153,3 +155,5 @@ Licensed under the **Apache License, Version 2.0**. See [LICENSE](LICENSE) for d
 
 
 
+git remote add origin https://github.com/alnsmworld-tech/LeaseShield.git
+git push -u origin main
