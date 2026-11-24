@@ -154,6 +154,3 @@ flutter run -d ios
 Licensed under the **Apache License, Version 2.0**. See [LICENSE](LICENSE) for details.
 
 
-
-git remote add origin https://github.com/alnsmworld-tech/LeaseShield.git
-git push -u origin main

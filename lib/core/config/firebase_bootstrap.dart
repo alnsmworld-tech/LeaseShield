@@ -72,12 +72,19 @@ class FirebaseBootstrap {
     }
 
     // 1. Firebase App Check (Mandatory for Firebase AI Logic protection)
+    // Uses Debug provider in debug builds or when explicitly requested via
+    // `--dart-define=USE_APP_CHECK_DEBUG=true` (for sideloaded judge APKs);
+    // uses Play Integrity / App Attest in standard store release builds.
+    const forceDebugAppCheck =
+        bool.fromEnvironment('USE_APP_CHECK_DEBUG', defaultValue: false);
+    final useDebugProvider = kDebugMode || forceDebugAppCheck;
     try {
       await FirebaseAppCheck.instance.activate(
-        androidProvider:
-            kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+        androidProvider: useDebugProvider
+            ? AndroidProvider.debug
+            : AndroidProvider.playIntegrity,
         appleProvider:
-            kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
+            useDebugProvider ? AppleProvider.debug : AppleProvider.appAttest,
       );
       appCheckReady = true;
     } catch (e) {
