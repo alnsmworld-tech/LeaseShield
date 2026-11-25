@@ -14,7 +14,7 @@ Renters routinely hand over deeply sensitive documents—leases containing full 
 **LeaseShield** flips that paradigm using **Firebase AI Logic Hybrid Inference**:
 
 1. **100% On-Device Privacy & Offline Triage:**
-   - Captures a lease page via on-device **Google ML Kit OCR** (or one-tap built-in sample leases for instant Airplane Mode demos).
+   - Captures a lease page via on-device **Google ML Kit OCR**, **Upload PDF / TXT** (Apache PDFBox on Android / Apple PDFKit on iOS), pasted text, or one-tap built-in sample leases for instant Airplane Mode demos.
    - Runs **Gemini Nano 4** on Android (`firebase-ai` + `firebase-ai-ondevice`) or **Apple Foundation Models** on iOS (`FoundationModels` + `FirebaseAI`) locally to redact all PII and flag predatory clauses.
    - Displays a live **Glass Box Telemetry Pill** (`ON-DEVICE • Gemini Nano 4 • 340ms`).
 2. **Transparent Cloud Escalation ("Draft Landlord Counter-Offer"):**
@@ -124,6 +124,22 @@ Configure these optional keys in Firebase Remote Config (safe defaults are bundl
 - `red_flag_prompt_template` — Prompt template for on-device PII redaction & clause triage
 - `negotiation_prompt_template` — Prompt template for Cloud Gemini counter-offer generation
 - `default_triage_mode` — `"ONLY_ON_DEVICE"` (default) or `"PREFER_ON_DEVICE"`
+
+---
+
+## Device Requirements & Compatibility
+
+LeaseShield runs on a wide range of Android and iOS devices, automatically adapting to hardware AI capabilities with zero-PII privacy guarantees:
+
+| Platform | Minimum OS (App + Local Fallback + Cloud Gemini) | Native On-Device LLM Support |
+| :--- | :--- | :--- |
+| **Android** | **Android 8.0+ (API 26+)** — Full app, ML Kit OCR, on-device PDF/TXT parsing, `LocalPiiScrubber` + `LocalClauseDetector`, and Cloud Gemini escalation | **Android 14+ (API 34+)** with **Android AICore** (e.g., Pixel 8/9/10 series, Galaxy S24/S25 series) for **Gemini Nano 4** via `firebase-ai-ondevice` |
+| **iOS** | **iOS 16.0+** — Full app, ML Kit OCR, on-device `PDFKit` parsing, `LocalPiiScrubber` + `LocalClauseDetector`, and Cloud Gemini escalation | **iOS 26+** on **Apple Intelligence–capable hardware** (iPhone 15 Pro / 16 series and newer) for **Apple Foundation Models** |
+
+> **Graceful Hybrid Fallback on Older Devices:**  
+> On devices without Gemini Nano (AICore) or Apple Foundation Models, LeaseShield never crashes and never leaks raw PII:
+> - **`On-Device Only` mode:** Runs 100% locally offline using `LocalPiiScrubber` + `LocalClauseDetector`.
+> - **`Hybrid Auto` (`PREFER_ON_DEVICE`) mode:** Scrubs all PII locally with `LocalPiiScrubber` *before* escalating the anonymized text to Cloud Gemini (`gemini-2.5-flash`), displaying a transparent amber fallback banner.
 
 ---
 

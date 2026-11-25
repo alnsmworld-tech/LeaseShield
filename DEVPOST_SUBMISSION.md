@@ -17,7 +17,7 @@ Every year, millions of students, renters, and small business owners sign rental
 We built **LeaseShield** because lease analysis is a textbook case where **hybrid AI is not a gimmick—it is an architectural necessity**: sensitive PII redaction and initial clause triage *must* happen locally on-device, while heavy-reasoning regional negotiation drafting belongs in the cloud using *only* anonymized excerpts.
 
 ### What it does
-1. **Offline-First Lease Capture:** Scans any physical lease page using on-device **Google ML Kit OCR** (camera or photo library), accepts pasted text, or lets judges test immediately in Airplane Mode using **3 built-in sample leases** pre-loaded with realistic fake US and Indian PII.
+1. **Offline-First Lease Capture:** Scans any physical lease page using on-device **Google ML Kit OCR** (camera or photo library), uploads **PDF / TXT** lease files parsed 100% locally (Apache PDFBox on Android, built-in `PDFKit` on iOS), accepts pasted text, or lets judges test immediately in Airplane Mode using **3 built-in sample leases** pre-loaded with realistic fake US and Indian PII.
 2. **100% On-Device PII Redaction & Red-Flag Triage:** Uses **Firebase AI Logic Hybrid Inference** (`ONLY_ON_DEVICE` / `PREFER_ON_DEVICE`) targeting **Gemini Nano 4** on Android and **Apple Foundation Models** on iOS to redact all PII (`[REDACTED_NAME]`, `[REDACTED_ID]`, `[REDACTED_BANK]`, `[REDACTED_PHONE]`, `[REDACTED_EMAIL]`, `[REDACTED_ADDRESS]`) and return structured JSON red-flag cards with risk scores and suggested revisions.
 3. **Glass Box Live Hybrid Telemetry:** Every AI screen displays a real-time pill showing exact execution provenance and latency—`ON-DEVICE • Gemini Nano 4 • 340ms` in emerald green or `IN-CLOUD • gemini-2.5-flash • 1,120ms` in indigo—plus an amber transparency banner whenever a privacy-preserving fallback runs on unsupported hardware.
 4. **Glass Box Outbound Payload Inspector & Cloud Escalation:** When the user taps **Draft Counter-Offer**, they can tap **Inspect Payload** *before* calling the cloud to inspect the exact outbound JSON and verify **ZERO PII** is leaving the device. Only the redacted clause excerpts and city/region are sent to **Cloud Gemini** via Firebase AI Logic to generate a polite, firm counter-offer email grounded in local tenant-protection norms.
@@ -44,6 +44,11 @@ We built **LeaseShield** because lease analysis is a textbook case where **hybri
 - Multi-page PDF lease scanning and side-by-side clause diffing when a landlord sends back a revised draft.
 - Optional Google Sign-In account upgrade to sync anonymized lease history across devices.
 - Community-curated regional tenant-rights packs delivered dynamically via Firebase Remote Config.
+
+### Device Requirements & Compatibility
+- **Android:** Runs on **Android 8.0+ (API 26+)** with full OCR, on-device PDF/TXT parsing, local PII scrubbing, and Cloud Gemini escalation; native **Gemini Nano 4** on-device inference requires **Android 14+ (API 34+)** with **Android AICore** (e.g., Pixel 8/9/10, Galaxy S24/S25).
+- **iOS:** Runs on **iOS 16.0+** with full OCR, `PDFKit` parsing, local PII scrubbing, and Cloud Gemini escalation; native **Apple Foundation Models** requires **iOS 26+** on Apple Intelligence–capable hardware.
+- **Graceful Fallback:** On older devices without on-device LLMs, `On-Device Only` runs 100% locally offline, while `Hybrid Auto` scrubs all PII locally *before* escalating to Cloud Gemini with an amber transparency banner.
 
 ---
 
