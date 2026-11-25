@@ -4,6 +4,7 @@ import '../../features/analysis/bloc/analysis_bloc.dart';
 import '../../features/history/bloc/history_bloc.dart';
 import '../../features/history/data/lease_history_repository.dart';
 import '../../features/negotiation/bloc/negotiation_bloc.dart';
+import '../../features/scanner/data/lease_document_service.dart';
 import '../../features/scanner/data/lease_ocr_service.dart';
 import '../config/firebase_bootstrap.dart';
 import '../config/remote_config_service.dart';
@@ -40,6 +41,10 @@ Future<FirebaseBootstrapResult> setupServiceLocator() async {
 
   if (!sl.isRegistered<LeaseOcrService>()) {
     sl.registerLazySingleton<LeaseOcrService>(LeaseOcrService.new);
+  }
+
+  if (!sl.isRegistered<LeaseDocumentService>()) {
+    sl.registerLazySingleton<LeaseDocumentService>(LeaseDocumentService.new);
   }
 
   final bootstrapResult = await FirebaseBootstrap.initialize(

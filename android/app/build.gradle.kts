@@ -52,6 +52,9 @@ dependencies {
 
     // Coroutines for non-blocking MethodChannel execution
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+
+    // On-device PDF text extraction (Apache 2.0)
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
 }
 
 flutter {

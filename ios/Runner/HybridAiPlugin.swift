@@ -1,5 +1,6 @@
 import Flutter
 import Foundation
+import PDFKit
 
 #if canImport(FirebaseAI)
 import FirebaseAI
@@ -34,9 +35,35 @@ public final class HybridAiPlugin: NSObject, FlutterPlugin {
             handleGetCapabilities(result: result)
         case "generateContent":
             handleGenerateContent(call: call, result: result)
+        case "extractPdfText":
+            handleExtractPdfText(call: call, result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
+    }
+
+    private func handleExtractPdfText(call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let path = args["path"] as? String,
+              !path.isEmpty else {
+            result(FlutterError(
+                code: "INVALID_ARGUMENT",
+                message: "PDF file path is required.",
+                details: nil
+            ))
+            return
+        }
+        let url = URL(fileURLWithPath: path)
+        guard let document = PDFDocument(url: url) else {
+            result(FlutterError(
+                code: "PDF_EXTRACT_ERROR",
+                message: "Unable to open PDF document.",
+                details: nil
+            ))
+            return
+        }
+        let extracted = (document.string ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        result(extracted)
     }
 
     private func handleGetCapabilities(result: @escaping FlutterResult) {

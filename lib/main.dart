@@ -19,6 +19,7 @@ import 'features/negotiation/bloc/negotiation_bloc.dart';
 import 'features/negotiation/bloc/negotiation_event.dart';
 import 'features/negotiation/presentation/negotiation_page.dart';
 import 'features/onboarding/presentation/onboarding_page.dart';
+import 'features/scanner/data/lease_document_service.dart';
 import 'features/scanner/data/lease_ocr_service.dart';
 import 'features/scanner/presentation/scanner_page.dart';
 
@@ -220,6 +221,7 @@ class _LeaseShieldShellState extends State<_LeaseShieldShell> {
         children: [
           ScannerPage(
             ocrService: sl<LeaseOcrService>(),
+            documentService: sl<LeaseDocumentService>(),
             hybridAiService: sl<HybridAiService>(),
             remoteConfigService: sl<RemoteConfigService>(),
             onAnalyzeLease: _startAnalysis,

@@ -5,6 +5,7 @@ import '../../../core/config/remote_config_service.dart';
 import '../../../core/hybrid_ai/hybrid_ai_models.dart';
 import '../../../core/hybrid_ai/hybrid_ai_service.dart';
 import '../../../core/theme/app_theme.dart';
+import '../data/lease_document_service.dart';
 import '../data/lease_ocr_service.dart';
 import '../data/sample_leases.dart';
 
@@ -13,12 +14,14 @@ class ScannerPage extends StatefulWidget {
   const ScannerPage({
     super.key,
     required this.ocrService,
+    required this.documentService,
     required this.hybridAiService,
     required this.remoteConfigService,
     required this.onAnalyzeLease,
   });
 
   final LeaseOcrService ocrService;
+  final LeaseDocumentService documentService;
   final HybridAiService hybridAiService;
   final RemoteConfigService remoteConfigService;
   final void Function({
@@ -76,6 +79,38 @@ class _ScannerPageState extends State<ScannerPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('On-device OCR error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _scanning = false);
+    }
+  }
+
+  Future<void> _handleDocumentUpload() async {
+    setState(() => _scanning = true);
+    try {
+      final doc = await widget.documentService.pickAndExtractDocument();
+      if (!mounted || doc == null) return;
+      if (doc.extractedText.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No selectable text found in this PDF. Try taking a photo or screenshot with Scan Camera / Pick Photo.',
+            ),
+          ),
+        );
+        return;
+      }
+      widget.onAnalyzeLease(
+        title: doc.fileName,
+        region: 'United States',
+        rawLeaseText: doc.extractedText,
+        mode: _selectedMode,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Document read error: $e')),
         );
       }
     } finally {
@@ -281,10 +316,24 @@ class _ScannerPageState extends State<ScannerPage> {
           ],
         ),
         const SizedBox(height: 10),
-        OutlinedButton.icon(
-          onPressed: _openPasteLeaseDialog,
-          icon: const Icon(Icons.edit_note_rounded),
-          label: const Text('Or Paste Lease Text'),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _scanning ? null : _handleDocumentUpload,
+                icon: const Icon(Icons.upload_file_rounded),
+                label: const Text('Upload PDF / TXT'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _scanning ? null : _openPasteLeaseDialog,
+                icon: const Icon(Icons.edit_note_rounded),
+                label: const Text('Paste Text'),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 20),
 

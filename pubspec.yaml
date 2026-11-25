@@ -23,9 +23,10 @@ dependencies:
   firebase_app_check: ^0.3.2+5
   firebase_remote_config: ^5.4.2
 
-  # OCR, Media, Connectivity & Sharing
+  # OCR, Media, Documents, Connectivity & Sharing
   google_mlkit_text_recognition: ^0.15.0
   image_picker: ^1.1.2
+  file_picker: ^8.1.7
   connectivity_plus: ^6.1.3
   share_plus: ^10.1.4
   intl: ^0.20.2

@@ -1,5 +1,6 @@
 package com.leaseshield.lease_shield
 
+import android.content.Context
 import android.os.Build
 import android.os.SystemClock
 import com.google.firebase.Firebase
@@ -10,9 +11,13 @@ import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.PublicPreviewAPI
 import com.google.firebase.ai.type.generationConfig
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.text.PDFTextStripper
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,6 +37,7 @@ import kotlinx.coroutines.withContext
 @OptIn(PublicPreviewAPI::class)
 class HybridAiPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     private lateinit var channel: MethodChannel
+    private lateinit var appContext: Context
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     companion object {
@@ -41,6 +47,8 @@ class HybridAiPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        appContext = binding.applicationContext
+        PDFBoxResourceLoader.init(appContext)
         channel = MethodChannel(binding.binaryMessenger, CHANNEL_NAME)
         channel.setMethodCallHandler(this)
     }
@@ -54,7 +62,32 @@ class HybridAiPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         when (call.method) {
             "getCapabilities" -> handleGetCapabilities(result)
             "generateContent" -> handleGenerateContent(call, result)
+            "extractPdfText" -> handleExtractPdfText(call, result)
             else -> result.notImplemented()
+        }
+    }
+
+    private fun handleExtractPdfText(call: MethodCall, result: MethodChannel.Result) {
+        val path = call.argument<String>("path")
+        if (path.isNullOrBlank()) {
+            result.error("INVALID_ARGUMENT", "PDF file path is required.", null)
+            return
+        }
+        scope.launch {
+            try {
+                val file = File(path)
+                val extracted = PDDocument.load(file).use { doc ->
+                    val stripper = PDFTextStripper()
+                    stripper.getText(doc).trim()
+                }
+                withContext(Dispatchers.Main) {
+                    result.success(extracted)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    result.error("PDF_EXTRACT_ERROR", e.localizedMessage ?: "Failed to read PDF.", null)
+                }
+            }
         }
     }
 
