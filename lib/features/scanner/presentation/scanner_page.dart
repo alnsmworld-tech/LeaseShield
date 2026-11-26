@@ -204,8 +204,9 @@ class _ScannerPageState extends State<ScannerPage> {
     final theme = Theme.of(context);
     final capsLabel = _capabilities == null
         ? 'Checking device AI...'
-        : '${_capabilities!.onDeviceModelName} • '
-            '${_capabilities!.onDeviceSupported ? "On-Device Ready" : "Local Engine Ready"}';
+        : _capabilities!.onDeviceSupported
+            ? '${_capabilities!.onDeviceModelName} • On-Device Ready'
+            : 'Local Privacy Engine • Offline Ready';
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
