@@ -24,12 +24,16 @@ We built **LeaseShield** because lease analysis is a textbook case where **hybri
 5. **Anonymized Cloud History:** Saves *only* redacted lease summaries and negotiation drafts to **Cloud Firestore** under `users/{uid}/leases/{leaseId}`, backed by **Firebase Anonymous Auth**, **Firebase App Check**, and **Firebase Remote Config**.
 
 ### How we built it
-- **Flutter (Android + iOS):** Feature-First Clean Architecture (`lib/core/`, `lib/features/{onboarding,scanner,analysis,negotiation,history}`) using `flutter_bloc`, `equatable`, `get_it`, and Material 3.
-- **Native Firebase AI Logic Bridges:** Typed Flutter `MethodChannel('com.leaseshield/hybrid_ai')` bridging Dart to:
-  - **Android (Kotlin):** `HybridAiPlugin.kt` integrating `com.google.firebase:firebase-ai:17.11.0` and `com.google.firebase:firebase-ai-ondevice:16.0.0-beta01` with explicit `InferenceMode` routing and `response.inferenceSource` telemetry.
-  - **iOS (Swift):** `HybridAiPlugin.swift` integrating Apple `FoundationModels` for on-device execution and `FirebaseAI` for Cloud Gemini escalation under the exact same channel contract.
-- **Defense-in-Depth Privacy Fallback:** `LocalPiiScrubber` (deterministic Dart regex scrubber covering US SSN, Indian Aadhaar/PAN, bank/routing/IFSC, emails, phone numbers, street/flat addresses, and party names) runs locally *before* any `PREFER_ON_DEVICE` cloud fallback and *before* any Firestore write. On offline unsupported devices, `LocalClauseDetector` guarantees zero-crash local triage.
-- **Firebase Production Stack:** Firebase App Check (debug provider in debug, Play Integrity / App Attest in release), Firebase Remote Config (`red_flag_prompt_template`, `negotiation_prompt_template`, `default_triage_mode`), Anonymous Auth, and owner-isolated Firestore Security Rules.
+- **Cross-Platform Flutter (Android + iOS from a Single Codebase):** Built in **Flutter** using Feature-First Clean Architecture (`lib/core/`, `lib/features/{onboarding,scanner,analysis,negotiation,history}`), `flutter_bloc`, `equatable`, `get_it`, and Material 3. Using Flutter lets us deliver one cohesive, high-trust UI across **both Android and iOS** while delegating platform-specific on-device AI and PDF parsing to native Swift and Kotlin bridges.
+- **Unified Native Firebase AI Logic Bridges (`MethodChannel('com.leaseshield/hybrid_ai')`):**
+  - **Android (Kotlin):** `HybridAiPlugin.kt` integrates `com.google.firebase:firebase-ai:17.11.0` + `com.google.firebase:firebase-ai-ondevice:16.0.0-beta01` targeting **Gemini Nano 4** with explicit `InferenceMode` routing (`ONLY_ON_DEVICE`, `PREFER_ON_DEVICE`, `ONLY_IN_CLOUD`) and live `response.inferenceSource` telemetry, plus Apache PDFBox for on-device PDF extraction.
+  - **iOS (Swift):** `HybridAiPlugin.swift` integrates Apple **`FoundationModels`** for on-device execution and **`FirebaseAI`** for Cloud Gemini escalation under the exact same channel contract, plus Apple's built-in `PDFKit` for local PDF extraction.
+- **3-Tier Privacy-First Cascade (Inclusive Support for Devices Without Gemini Nano / Apple Foundation Models):**  
+  Most renters—especially students and first-time tenants—do not own flagship AI hardware. Instead of locking out older phones or silently sending raw PII to the cloud, LeaseShield adapts automatically:
+  1. **Tier 1 — Native On-Device LLM (Android 14+ AICore / iOS 26+ Apple Intelligence):** Runs Gemini Nano 4 or Apple Foundation Models 100% locally (`ON-DEVICE • Gemini Nano 4`).
+  2. **Tier 2 — `Hybrid Auto` (`PREFER_ON_DEVICE`) on Non-Flagship Devices:** Detects missing on-device LLM hardware, runs our deterministic **`LocalPiiScrubber`** *locally first* (scrubbing US SSN, Indian Aadhaar/PAN, bank/routing/IFSC, emails, phone numbers, addresses, and party names), and only then escalates the *anonymized* text to **Cloud Gemini (`gemini-2.5-flash`)** while surfacing an amber transparency banner.
+  3. **Tier 3 — `On-Device Only` / Airplane Mode on Non-Flagship Devices:** Runs `LocalPiiScrubber` + `LocalClauseDetector` **100% offline with zero network calls and zero crashes**, accurately displaying `Local Privacy Engine • Offline Ready` on the dashboard so users are never misled about hardware capabilities.
+- **Firebase Production Stack:** Firebase App Check (debug provider in debug, Play Integrity / App Attest in release), Firebase Remote Config (`red_flag_prompt_template`, `negotiation_prompt_template`, `default_triage_mode`), Anonymous Auth, and owner-isolated Firestore Security Rules (`users/{uid}/leases/{leaseId}`).
 
 ### Challenges we ran into
 - Bridging the experimental `@PublicPreviewAPI` `firebase-ai-ondevice` Android SDK and iOS `FoundationModels` into a single unified Dart `MethodChannel` contract with accurate latency and `inferenceSource` reporting.
@@ -37,8 +41,10 @@ We built **LeaseShield** because lease analysis is a textbook case where **hybri
 - Ensuring zero-friction evaluation across every device—including older Android phones without AICore—while staying 100% transparent about where inference executed.
 
 ### Accomplishments that we're proud of
-- True **Glass Box AI** UX: users don't have to *trust* our privacy claim—they can visually inspect the emerald-highlighted redacted lease, the live `ON-DEVICE` / `IN-CLOUD` telemetry pill, and the exact outbound JSON payload before a single byte touches the cloud.
-- Full multi-platform Flutter architecture with real native Android + iOS Firebase AI Logic bridges, deployed Firestore security rules, live Remote Config templates, and 11/11 passing unit and widget tests.
+- **True Multi-Platform Hybrid AI in Flutter:** One Flutter codebase delivering identical, polished UX on **both Android and iOS** while invoking real native **Gemini Nano 4** (Kotlin) and **Apple Foundation Models** (Swift) bridges alongside **Cloud Gemini**.
+- **Privacy for Every Phone, Not Just Flagships:** Our 3-tier fallback guarantees that even a budget Android 11 phone without AICore still gets 100% offline PII redaction & clause flagging—or local PII scrubbing *before* Cloud Gemini fallback—with honest hardware capability reporting.
+- **True "Glass Box" AI UX:** Users don't have to *trust* our privacy claim—they can visually inspect the emerald-highlighted redacted lease, the live `ON-DEVICE` / `IN-CLOUD` telemetry pill, and the exact outbound JSON payload (`ZERO PII VERIFIED`) before a single byte touches the cloud.
+- **Production Firebase Hygiene:** Deployed Firestore owner-only security rules, live Remote Config prompt templates, App Check integration, Apache 2.0 licensing, and 11/11 passing unit and widget tests.
 
 ### What's next for LeaseShield
 - Multi-page PDF lease scanning and side-by-side clause diffing when a landlord sends back a revised draft.
